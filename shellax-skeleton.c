@@ -353,7 +353,8 @@ int process_command(struct command_t *command)
 		/// This shows how to do exec with auto-path resolve
 		// add a NULL argument to the end of args, and the name to the beginning
 		// as required by exec
-
+        
+        /* ////////////////// OLD CODE START
 		// increase args size by 2
 		command->args=(char **)realloc(
 			command->args, sizeof(char *)*(command->arg_count+=2));
@@ -369,7 +370,55 @@ int process_command(struct command_t *command)
 
 		execvp(command->name, command->args); // exec+args+path
 		exit(0);
-		/// TODO: do your own exec with path resolving using execv()
+		*/ ////////////////// OLD CODE END
+
+        /// TODO: do your own exec with path resolving using execv()
+            
+            
+        //////////////////////////////////////////
+		command->args=(char **)realloc(
+			command->args, sizeof(char *)*(command->arg_count+=2));
+
+		// shift everything forward by 1
+		for (int i=command->arg_count-2;i>0;--i)
+			command->args[i]=command->args[i-1];
+       
+		// set args[0] as a copy of name
+		command->args[0]=strdup(command->name);
+		// set args[arg_count-1] (last) to NULL
+		command->args[command->arg_count-1]=NULL;
+
+        //printf("Hello guys\n");
+        //for (int i = 0; i < command->arg_count -1; i++) {
+        //    printf("%s\n", command->args[i]);
+        //}
+        //printf("Listed element : %d\n", command->arg_count); 
+        
+        char* general_command_path = (char*) malloc(sizeof(char)*(6 + strlen(command->name)) );
+        char* local_command_path = (char*) malloc(sizeof(500));
+        char *path = realpath(command->name, NULL);
+        
+        if (path == NULL) {
+            //printf("Cannot find the file with name %s\n", command->name);
+            strcat(general_command_path, "/bin/");
+            strcat(general_command_path, command->name);
+            //printf("Command Name : %s\n", command->name);
+            execv(general_command_path, command->args++);
+            free(general_command_path);
+            exit(0);
+        }
+        else {
+            //printf("ELSE E GİRDİM \n");
+            strcat(local_command_path, path);
+            //printf("loc_name2 %s\n", loc_name2);
+            execv(local_command_path, command->args++);
+            free(path);
+            free(local_command_path);
+            exit(0);
+        }
+        
+        /////////////////////////////////////////
+        
 	}
 	else
 	{
