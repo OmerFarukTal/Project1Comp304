@@ -316,6 +316,14 @@ int main()
 
 		code = process_command(command);
 		if (code==EXIT) break;
+        
+        ///// MİNE START
+		code = prompt(command);
+		if (code==EXIT) break;
+        
+		code = process_command(command);
+		if (code==EXIT) break;
+        //// MİNE END    
 
 		free_command(command);
 	}
@@ -423,9 +431,24 @@ int process_command(struct command_t *command)
 	else
 	{
     // TODO: implement background processes here
-    wait(0); // wait for child process to finish
+        /*  ////////////////////////////////// OLD CODE  START
+        wait(0); // wait for child process to finish
 		return SUCCESS;
-	}
+        */  ////////////////////////////////// OLD CODE END
+        
+        if (command->background) {
+            return SUCCESS;
+        }
+        else {
+            wait(0);
+            return SUCCESS;
+        }
+
+        /*
+        printf("My last arg is %s\n", command->args[command->arg_count -1]);        
+        return SUCCESS;
+	    */
+    }
 
 	// TODO: your implementation here
 
