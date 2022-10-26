@@ -12,6 +12,7 @@ enum return_codes {
 	SUCCESS = 0,
 	EXIT = 1,
 	UNKNOWN = 2,
+    SUCCESS_BACKGROUND = 3,
 };
 
 struct command_t {
@@ -317,13 +318,8 @@ int main()
 		code = process_command(command);
 		if (code==EXIT) break;
         
-        ///// MİNE START
-		code = prompt(command);
-		if (code==EXIT) break;
-        
-		code = process_command(command);
-		if (code==EXIT) break;
-        //// MİNE END    
+        /////////// MINE START
+        /////////// MINE END
 
 		free_command(command);
 	}
