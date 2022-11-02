@@ -380,8 +380,9 @@ int process_command(struct command_t *command)
             
             
         //////////////////////////////////////////
-        if (!command->background) {
-
+   
+        pid_t pid2 = fork();
+        if (pid2 == 0) {
             command->args=(char **)realloc(
                 command->args, sizeof(char *)*(command->arg_count+=2));
 
@@ -458,88 +459,15 @@ int process_command(struct command_t *command)
             }
         }
         else {
-            pid_t pid2 = fork();
-            if (pid2 == 0) {
-                command->args=(char **)realloc(
-                    command->args, sizeof(char *)*(command->arg_count+=2));
-
-                // shift everything forward by 1
-                for (int i=command->arg_count-2;i>0;--i)
-                    command->args[i]=command->args[i-1];
-               
-                // set args[0] as a copy of name
-                command->args[0]=strdup(command->name);
-                // set args[arg_count-1] (last) to NULL
-                command->args[command->arg_count-1]=NULL;
-
-                //printf("Hello guys\n");
-                //for (int i = 0; i < command->arg_count -1; i++) {
-                //    printf("%s\n", command->args[i]);
-                //}
-                //printf("Listed element : %d\n", command->arg_count); 
-                
-                char* general_command_path = (char*) malloc(sizeof(char)*(6 + strlen(command->name)) );
-                char* local_command_path = (char*) malloc(sizeof(500));
-                char *path = realpath(command->name, NULL);
-                
-                if (path == NULL) {
-                    // PATH : i.e. ls
-                    //printf("Cannot find the file with name %s\n", command->name);
-
-                    
-                    char *Path = getenv("PATH");
-                    char *token = strtok(Path, ":"); 
-                    
-                    while (token != NULL) {
-                        
-                        char *path_to_command = malloc(sizeof(char)*150);
-                        strcat(path_to_command, token);
-                        strcat(path_to_command, "/");
-                        strcat(path_to_command, command->name);
-                        
-                        if (access(path_to_command, X_OK)) {
-                            //printf("NO\n");
-                            //continue;
-                        }
-                        else {
-                            //printf("YES\n");
-                            free(path);
-                            free(general_command_path);
-                            free(local_command_path);
-                            execv(path_to_command, command->args++);
-                            exit(0); 
-                        }
-                        
-                        free(path_to_command);
-                        token = strtok(NULL, ":");
-                    }
-                    
-                    /* 
-                    strcat(general_command_path, "/bin/");
-                    strcat(general_command_path, command->name);
-                    //printf("Command Name : %s\n", command->name);
-                    execv(general_command_path, command->args++);
-                    free(general_command_path);
-                    exit(0);
-                    */
-                }
-                else {
-                    // local commands : i.e. ./dummy.out
-                    //printf("ELSE E GİRDİM \n");
-                    strcat(local_command_path, path);
-                    //printf("loc_name2 %s\n", loc_name2);
-                    execv(local_command_path, command->args++);
-                    free(path);
-                    free(local_command_path);
-                    free(general_command_path);
-                    exit(0);
-                }
-            }
-            else {
-                // Parent
+            // Parent
+            if (command->background) {
                 exit(0);
             }
+            else {
+                wait(0);
+            }
         }
+    
         /////////////////////////////////////////
         
 	}
@@ -551,10 +479,16 @@ int process_command(struct command_t *command)
 		return SUCCESS;
         */  ////////////////////////////////// OLD CODE END
         
-        //print_command(command);
+        print_command(command);
 
-        wait(0);
-        return SUCCESS;
+        if (command->background) {
+            wait(0);
+            return SUCCESS;
+        }
+        else {
+            wait(0);
+            return SUCCESS;
+        }
 
         /*
         printf("My last arg is %s\n", command->args[command->arg_count -1]);        
