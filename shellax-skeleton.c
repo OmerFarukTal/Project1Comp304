@@ -304,21 +304,32 @@ int prompt(struct command_t *command)
   	return SUCCESS;
 }
 int process_command(struct command_t *command);
+// ME
+int handle_pipe_and_IO(struct command_t *command);
+void pipe_handler(struct command_t *command);
+void io_handler(struct command_t *command);
 int main()
 {
 	while (1)
 	{
 		struct command_t *command=malloc(sizeof(struct command_t));
 		memset(command, 0, sizeof(struct command_t)); // set all bytes to 0
-
+        
+        /* ////OLD CODE START
 		int code;
 		code = prompt(command);
 		if (code==EXIT) break;
 
 		code = process_command(command);
 		if (code==EXIT) break;
+        */ // OLD CODE END
         
         /////////// MINE START
+        int code;
+        code = prompt(command);
+        if(code==EXIT) break;
+        code = handle_pipe_and_IO(command);
+        if (code == EXIT) break;
         /////////// MINE END
 
 		free_command(command);
@@ -567,3 +578,83 @@ int process_command(struct command_t *command)
 	printf("-%s: %s: command not found\n", sysname, command->name);
 	return UNKNOWN;
 }
+
+
+int handle_pipe_and_IO(struct command_t *command){
+    if (command->next == NULL && command->redirects[0] == NULL &&  command->redirects[1] == NULL &&  command->redirects[2] == NULL ) {
+        printf("OKAY\n");
+        return process_command(command);
+    }
+    else if (command->next != NULL) {
+        // IT CONTAINS PIPE
+        printf("IT CONTAINS PIPE\n");
+        
+        /* 
+        struct command_t *currCommand = command;
+        while (currCommand->next != NULL) {
+            print_command(currCommand);
+            currCommand =currCommand->next;
+        }*/
+
+        pipe_handler(command);
+        return SUCCESS; // ? 
+    }
+    return SUCCESS;
+}
+
+void pipe_handler(struct command_t *command) {
+    int pipefd[2];
+    int infd;    
+    int processCounter = 0;
+
+    struct command_t *currCommand = command;
+
+    while (currCommand != NULL) {
+        //printf("It is working %d\n", processCounter);
+        
+        if (pipe(pipefd) == -1) {
+            perror("pipe");
+        }
+        
+
+        pid_t pid;
+        pid = fork();
+
+        if (pid == -1) {
+            perror("fork");
+            return;
+        }
+        else if (pid == 0) {
+            
+            if (processCounter != 0) {
+                // stdin
+                dup2(infd, 0);
+            }
+            
+            if (currCommand->next != NULL) {
+                // stdout
+                dup2(pipefd[1], 1);
+            }
+            
+            process_command(currCommand);
+            exit(0);
+        }
+        else {
+            wait(0);
+            infd = pipefd[0];
+            close(pipefd[1]);
+        }
+        
+        currCommand = currCommand->next;
+        processCounter++;
+    }
+    
+}
+
+void io_handler(struct command_t *command) {
+    // Guideline:
+    // get the min index of IO redirection [before which args]
+    // then using  dup and dup2 (dup is encourgaed) 
+
+}
+

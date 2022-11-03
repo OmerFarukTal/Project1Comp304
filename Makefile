@@ -15,4 +15,6 @@ dummy:
 	rm ./dummy.out
 	gcc dummy.c -o dummy.out
 	./dummy.out
-	
+
+make a:
+	touch ./a.out
