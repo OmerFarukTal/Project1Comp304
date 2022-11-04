@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <fcntl.h> /// ME ADDED
 const char * sysname = "shellax";
 
 enum return_codes {
@@ -23,6 +24,7 @@ struct command_t {
 	char **args;
 	char *redirects[3]; // in/out redirection
 	struct command_t *next; // for piping
+	char *commandStr;
 };
 
 /**
@@ -94,6 +96,27 @@ int show_prompt()
  */
 int parse_command(char *buf, struct command_t *command)
 {
+
+/////////// MINE START
+    char *pointerToPipe = strchr(buf, '|');
+    if (pointerToPipe != NULL) {
+	char *currComm = malloc(sizeof(char)*(pointerToPipe-buf + 1));
+	strncpy(currComm, buf, (pointerToPipe - buf));
+	strcat(currComm, "\0");
+	int len = strlen(currComm);
+	    while (len>0 && strchr(" \t", currComm[len-1])!=NULL)
+		    currComm[--len]=0; // trim right whitespace
+	command->commandStr = currComm;
+    }
+    else {
+	char*currComm = strdup(buf);
+	int len = strlen(currComm);
+	    while (len>0 && strchr(" \t", currComm[len-1])!=NULL)
+		    currComm[--len]=0; // trim right whitespace
+	command->commandStr = currComm;
+    }
+    ////////// MINE END
+
 	const char *splitters=" \t"; // split at whitespace
 	int index, len;
 	len=strlen(buf);
@@ -599,6 +622,11 @@ int handle_pipe_and_IO(struct command_t *command){
         pipe_handler(command);
         return SUCCESS; // ? 
     }
+    else if (command->redirects[0] != NULL ||  command->redirects[1] != NULL ||  command->redirects[2] != NULL ) {
+        printf("IT CONTAINS IO\n");
+        io_handler(command);
+        return SUCCESS; // ? 
+    }
     return SUCCESS;
 }
 
@@ -651,10 +679,167 @@ void pipe_handler(struct command_t *command) {
     
 }
 
-void io_handler(struct command_t *command) {
+void io_handler(struct command_t *command) { // Cannot handle input commands, command needs to be at the beginnig to work
     // Guideline:
     // get the min index of IO redirection [before which args]
     // then using  dup and dup2 (dup is encourgaed) 
+    if (command->redirects[0] == NULL &&  command->redirects[1] == NULL &&  command->redirects[2] == NULL ) {
+        printf("OKAY2\n");
+    }
+    else {
+        // Find the beginning of IO command
+        char* fileStart;
+        if (strchr(command->commandStr, '>') == NULL) fileStart = strchr(command->commandStr, '<'); 
+        else if (strchr(command->commandStr, '<') == NULL) fileStart = strchr(command->commandStr, '>'); 
+        else if (strchr(command->commandStr, '>') < strchr(command->commandStr, '<')) fileStart = strchr(command->commandStr, '>');        
+        else fileStart = strchr(command->commandStr, '<');
+        
+        // Copy the string till IO command start
+        char *currComm = malloc(sizeof(char)*(fileStart - command->commandStr + 1));
+        strncpy(currComm, command->commandStr, (fileStart - command->commandStr));
+        strcat(currComm, "\0");
+        
+        // Create a sub command
+        // i.e = cat naber.txt > a.txt ------> subCommand : cat naber.txt
+		struct command_t *subCommand = (struct command_t*) malloc(sizeof(struct command_t));
+		memset(subCommand, 0, sizeof(struct command_t)); // set all bytes to 0        
+        parse_command(currComm, subCommand);
+        
+        //copy command->commandStr into a string and parse it for IO, and calculate IO redirection
+        /*
+        char* commandStrCpy = strdup(command->commandStr);
+        
+        char *ioPointer;
+        int ioCounter = 0;
+        if (strchr(commandStrCpy, '>') == NULL) ioPointer = strchr(commandStrCpy, '<'); 
+        else if (strchr(commandStrCpy, '<') == NULL) ioPointer = strchr(commandStrCpy, '>'); 
+        else if (strchr(commandStrCpy, '>') < strchr(commandStrCpy, '<')) ioPointer = strchr(commandStrCpy, '>');        
+        else ioPointer = strchr(commandStrCpy, '<');
+        while(ioPointer != NULL) {
+            if(ioPointer[0] == '>' && ioPointer[1] == '>') ioPointer++;
+            //if(ioPointer[0] == '>' && ioPointer[1] == '<') perror("><"); MAYBE NEED TO HANDLE THESE
+            //if(ioPointer[0] == '<' && ioPointer[1] == '>') perror("<>");
 
+            ioPointer++;
+            if (strchr(ioPointer, '>') == NULL) ioPointer = strchr(ioPointer, '<'); 
+            else if (strchr(ioPointer, '<') == NULL) ioPointer = strchr(ioPointer, '>'); 
+            else if (strchr(ioPointer, '>') < strchr(ioPointer, '<')) ioPointer = strchr(ioPointer, '>');        
+            else ioPointer = strchr(ioPointer, '<');
+            
+            //sleep(1);
+            //printf("IO POINTER %s\n", ioPointer);
+            ioCounter++;
+        }
+        */ 
+
+        //Begin further parse and IO direction
+        char* commandString = strdup(command->commandStr);
+
+        char *ioPoint;
+        int ioCount=0; 
+        int whichIO = -1; // 0 in 1 out 2 append
+        
+        int infd;
+        int pipefd[2];
+
+
+        if (strchr(commandString, '>') == NULL) ioPoint = strchr(commandString, '<'); 
+        else if (strchr(commandString, '<') == NULL) ioPoint = strchr(commandString, '>'); 
+        else if (strchr(commandString, '>') < strchr(commandString, '<')) ioPoint = strchr(commandString, '>');        
+        else ioPoint = strchr(commandString, '<');
+        while (ioPoint != NULL) {
+            //pipe
+            pipe(pipefd);
+
+            if (ioPoint[0] == '>' && ioPoint[1] == '>') {
+                whichIO = 2;
+                ioPoint++;
+            }
+            else if(ioPoint[0] == '>') {
+                whichIO = 1;
+            }
+            else if (ioPoint[0] == '<') {
+                whichIO = 0;
+            }
+
+            ioPoint++;
+            
+            char* nextIO;
+            if(strchr(ioPoint, '>') == NULL) nextIO = strchr(ioPoint, '<');
+            else if(strchr(ioPoint, '<') == NULL) nextIO = strchr(ioPoint, '>');
+            
+            char* fileName;
+            if (nextIO != NULL) {
+                fileName = malloc(sizeof(char)* (nextIO - ioPoint + 1));
+                strncpy(fileName, ioPoint , nextIO - ioPoint);
+                strcat(fileName, "\0");                
+            }
+            else {
+                fileName = strdup(ioPoint);
+            }
+            int len = strlen(fileName);
+            while (len>0 && strchr(" \t", fileName[0])!=NULL) // trim left whitespace
+            {
+                fileName++;
+                len--;
+            }
+	        while (len>0 && strchr(" \t", fileName[len-1])!=NULL)
+		        fileName[--len]=0; // trim right whitespace
+            //printf("Filename %s\n", fileName);            
+
+            if (strchr(ioPoint, '>') == NULL) ioPoint = strchr(ioPoint, '<'); 
+            else if (strchr(ioPoint, '<') == NULL) ioPoint = strchr(ioPoint, '>'); 
+            else if (strchr(ioPoint, '>') < strchr(ioPoint, '<')) ioPoint = strchr(ioPoint, '>');        
+            else ioPoint = strchr(ioPoint, '<');
+           
+            
+
+            if (whichIO == 0 && ioCount == 0) {
+            }
+            else if (whichIO == 1) {
+                int file_fd = open(fileName, O_RDWR | O_CREAT, 0666);
+                
+                int pid = fork();
+                if (pid == 0) {
+                    dup2(file_fd, 1);
+                    
+                    process_command(subCommand);
+                    close(file_fd);
+                    
+                    exit(0);
+                }
+                else {
+                    wait(0);
+                    infd = pipefd[0];
+                    close(pipefd[1]);
+                }
+
+            }
+            else if (whichIO == 2 && ioCount == 0) {
+                int file_fd = open(fileName, O_RDWR | O_CREAT | O_APPEND, 0666);
+                
+                int pid = fork();
+                if (pid == 0) {
+                    dup2(file_fd, 1);
+                    
+                    process_command(subCommand);
+                    close(file_fd);
+                    
+                    exit(0);
+                }
+                else {
+                    wait(0);
+                    infd = pipefd[0];
+                    close(pipefd[1]);
+                }
+
+
+            }
+
+            ioCount++;
+        }
+        
+    }
 }
+
 

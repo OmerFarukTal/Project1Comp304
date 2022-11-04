@@ -1,0 +1,12 @@
+a.out
+a.txt
+deneme.c
+DesignChoicePart2.txt
+dummy.c
+dummy.out
+Makefile
+naber.txt
+shellax-skeleton.c
+shellax-skeleton-elegant.c
+sleep15
+sleep15.c
