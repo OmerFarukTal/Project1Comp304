@@ -1,12 +1,12 @@
 
-run: clean a.out
-	./a.out
+run: clean shellax.out
+	./shellax.out
 
-a.out:
-	gcc shellax-skeleton.c
+shellax.out:
+	gcc shellax-skeleton.c -o shellax.out
 
 clean:
-	rm ./a.out
+	rm ./shellax.out
 
 write:
 	vim shellax-skeleton.c
@@ -17,4 +17,4 @@ dummy:
 	./dummy.out
 
 make a:
-	touch ./a.out
+	touch ./shellax.out
