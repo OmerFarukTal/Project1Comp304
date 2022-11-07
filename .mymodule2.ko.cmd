@@ -1,0 +1,1 @@
+cmd_/home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.ko := ld -r  -m elf_x86_64  --build-id=sha1  -T scripts/module.lds -o /home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.ko /home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.o /home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.mod.o;  true

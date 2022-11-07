@@ -1,3 +1,5 @@
+obj-m += mymodule2.o
+
 
 run: clean shellax.out
 	./shellax.out
@@ -18,3 +20,10 @@ dummy:
 
 make a:
 	touch ./shellax.out
+	
+module:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+
+cleanmodule:
+	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+

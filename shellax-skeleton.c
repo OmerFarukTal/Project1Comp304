@@ -7,7 +7,9 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <fcntl.h> /// ME ADDED
+#include <sys/stat.h>
 const char * sysname = "shellax";
+int module_installed = 0;
 
 enum return_codes {
 	SUCCESS = 0,
@@ -331,6 +333,8 @@ int process_command(struct command_t *command);
 int handle_pipe_and_IO(struct command_t *command);
 void pipe_handler(struct command_t *command);
 void io_handler(struct command_t *command);
+void module_handler(struct command_t *command);
+void module_output_adjuster();
 int main()
 {
 	while (1)
@@ -367,8 +371,11 @@ int process_command(struct command_t *command)
 	int r;
 	if (strcmp(command->name, "")==0) return SUCCESS;
 
-	if (strcmp(command->name, "exit")==0)
+	if (strcmp(command->name, "exit")==0) {
+        system("sudo rmmod mymodule2");
+        printf("Remove was succesfull\n");
 		return EXIT;
+    }
 
 	if (strcmp(command->name, "cd")==0)
 	{
@@ -380,6 +387,19 @@ int process_command(struct command_t *command)
 			return SUCCESS;
 		}
 	}
+    
+    if (strcmp(command->name, "psvis") == 0) {
+        if (fork() ==0) {
+            module_handler(command);
+            exit(0);
+        }
+        else {
+            wait(0);
+            module_output_adjuster();
+            module_installed=1;
+        }
+        return SUCCESS;
+    }
 
 	pid_t pid=fork();
 	if (pid==0) // child
@@ -841,5 +861,127 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
         
     }
 }
+
+
+void module_handler(struct command_t *command) {
+    
+    if (module_installed == 0) {
+        
+        system("sudo insmod mymodule2.ko processID=1");
+        printf("Succesfully installed module\n");
+        module_installed = 1;
+    }
+    else {
+        printf("Module was intalled before\n");
+    }
+    
+    int fd = open("trick.txt", O_WRONLY | O_APPEND | O_CREAT);
+    dup2(fd, 1);
+    system("dmesg");
+    close(fd);
+    
+
+    //printf("Dmesg Success\n");
+    chmod("trick.txt", S_IRUSR | S_IWUSR);
+   
+    /*
+    // FİLE düzenle
+    system("cat trick.txt | grep \"Loading Module\" -n | tail -1  > trick2.txt" );
+    //remove("trick.txt"); 
+    FILE *secondFile = fopen("trick2.txt", "r");
+    char line[1000];
+    
+    int lineCounter = 0;
+    while(fgets(line, 1000, secondFile)) {
+        printf("%s\n", line);
+    }
+    */
+        
+    
+
+    /*
+    FILE *trickFile;
+    char line[1000];
+
+    trickFile = fopen("trick.txt", "r");
+    
+    int lastLoad = -1;
+    int lineCounter = 0;
+    while(fgets(line, 1000, trickFile)) {
+        if (strstr(line , "Loading Module") != NULL) {
+            lastLoad = lineCounter;
+        }
+        lineCounter++;
+        if (lineCounter == 100) printf("HEYY");
+    }
+    
+    fclose(trickFile);
+    
+    FILE *secondFile = fopen("trick2.txt", "w");
+    trickFile = fopen("trick.txt", "r");
+    
+    lineCounter = 0;
+    while(fgets(line, 1000, trickFile)) {
+        if (lastLoad > lineCounter) {
+            continue;
+        }
+        else {
+            fputs(line, secondFile);
+        }
+        lineCounter++;
+    }
+    fclose(trickFile);
+    fclose(secondFile);
+    */
+
+}
+
+
+void module_output_adjuster() {
+    // FİLE düzenle
+    system("cat trick.txt | grep \"Loading Module\" -n | tail -1  > trick2.txt" );
+    //remove("trick.txt"); 
+    FILE *secondFile = fopen("trick2.txt", "r");
+    char line[1000];
+    
+    int lineCounter = 0;
+    long lineInt = -1;
+    char buffer[10];
+    char *ptr;
+    while(fgets(line, 1000, secondFile)) {
+        printf("%s", line);
+        char *toPtr = strchr(line, ':');
+        strncat(buffer, line, toPtr-line);
+        //strcat(buffer, '\0');
+        lineInt = strtol(buffer, &ptr, 10);
+    }
+    printf("%s and %ld\n", buffer, lineInt);
+    fclose(secondFile);
+    // Now read the trick and adjust the output
+    
+    FILE *trickFile = fopen("trick.txt", "r"); 
+    FILE *outputFile = fopen("trick2.txt", "w");
+    lineCounter = 0;
+    while (fgets(line, 1000, trickFile)) {
+        if (lineCounter < lineInt) {
+            
+        }
+        else {
+            
+            fputs(&line[16], outputFile);
+        }
+        lineCounter++;
+    }
+    fclose(trickFile);
+    fclose(outputFile);
+
+
+}
+
+
+
+
+
+
 
 
