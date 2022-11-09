@@ -26,7 +26,7 @@ int simple_init(void) {
     struct task_struct *task;
     
     printk(KERN_INFO "Loading Module PSVIS\n");
-    printk(KERN_INFO " %d NAN 1\n", processID);
+    //printk(KERN_INFO " %d NAN 1\n", processID);
 
 
     pid_struct = find_get_pid(processID);
@@ -62,12 +62,12 @@ void treeTraversal(struct task_struct *t) {
             oldestTask = tempTask;
             oldestTime = tempTask->start_time;
         }
-        printk(KERN_INFO "\t%d %d 0", (tempTask->parent)->pid, tempTask->pid);
+        printk(KERN_INFO "\t%d -> %d;", (tempTask->parent)->pid, tempTask->pid);
         treeTraversal(tempTask);
     }
 
     if (oldestTask != NULL) {
-        printk(KERN_INFO "\t%d %d 1", (oldestTask->parent)->pid, oldestTask->pid);
+        printk(KERN_INFO "\t%d -> %d [color=red,penwidth=3.0]; ", (oldestTask->parent)->pid, oldestTask->pid);
     }
 
 }

@@ -42,6 +42,7 @@ void print_command(struct command_t * command)
 	printf("\tRedirects:\n");
 	for (i=0;i<3;i++)
 		printf("\t\t%d: %s\n", i, command->redirects[i]?command->redirects[i]:"N/A");
+        
 	printf("\tArguments (%d):\n", command->arg_count);
 	for (i=0;i<command->arg_count;++i)
 		printf("\t\tArg %d: %s\n", i, command->args[i]);
@@ -334,7 +335,7 @@ int handle_pipe_and_IO(struct command_t *command);
 void pipe_handler(struct command_t *command);
 void io_handler(struct command_t *command);
 void module_handler(struct command_t *command);
-void module_output_adjuster();
+void module_output_adjuster(struct command_t *command);
 int main()
 {
 	while (1)
@@ -372,8 +373,10 @@ int process_command(struct command_t *command)
 	if (strcmp(command->name, "")==0) return SUCCESS;
 
 	if (strcmp(command->name, "exit")==0) {
-        system("sudo rmmod mymodule2");
-        printf("Remove was succesfull\n");
+        if (module_installed == 1) {
+            system("sudo rmmod mymodule2");
+            printf("Remove was succesfull\n");
+        }
 		return EXIT;
     }
 
@@ -395,7 +398,7 @@ int process_command(struct command_t *command)
         }
         else {
             wait(0);
-            module_output_adjuster();
+            module_output_adjuster(command);
             module_installed=1;
         }
         return SUCCESS;
@@ -708,6 +711,9 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
     }
     else {
         // Find the beginning of IO command
+
+        print_command(command);
+
         char* fileStart;
         if (strchr(command->commandStr, '>') == NULL) fileStart = strchr(command->commandStr, '<'); 
         else if (strchr(command->commandStr, '<') == NULL) fileStart = strchr(command->commandStr, '>'); 
@@ -867,7 +873,10 @@ void module_handler(struct command_t *command) {
     
     if (module_installed == 0) {
         
-        system("sudo insmod mymodule2.ko processID=1");
+        char input[100] = "sudo insmod mymodule2.ko processID=";
+        strcat(input, command->args[0]);
+
+        system(input);
         printf("Succesfully installed module\n");
         module_installed = 1;
     }
@@ -884,63 +893,12 @@ void module_handler(struct command_t *command) {
     //printf("Dmesg Success\n");
     chmod("trick.txt", S_IRUSR | S_IWUSR);
    
-    /*
-    // FİLE düzenle
-    system("cat trick.txt | grep \"Loading Module\" -n | tail -1  > trick2.txt" );
-    //remove("trick.txt"); 
-    FILE *secondFile = fopen("trick2.txt", "r");
-    char line[1000];
-    
-    int lineCounter = 0;
-    while(fgets(line, 1000, secondFile)) {
-        printf("%s\n", line);
-    }
-    */
-        
-    
-
-    /*
-    FILE *trickFile;
-    char line[1000];
-
-    trickFile = fopen("trick.txt", "r");
-    
-    int lastLoad = -1;
-    int lineCounter = 0;
-    while(fgets(line, 1000, trickFile)) {
-        if (strstr(line , "Loading Module") != NULL) {
-            lastLoad = lineCounter;
-        }
-        lineCounter++;
-        if (lineCounter == 100) printf("HEYY");
-    }
-    
-    fclose(trickFile);
-    
-    FILE *secondFile = fopen("trick2.txt", "w");
-    trickFile = fopen("trick.txt", "r");
-    
-    lineCounter = 0;
-    while(fgets(line, 1000, trickFile)) {
-        if (lastLoad > lineCounter) {
-            continue;
-        }
-        else {
-            fputs(line, secondFile);
-        }
-        lineCounter++;
-    }
-    fclose(trickFile);
-    fclose(secondFile);
-    */
-
 }
 
 
-void module_output_adjuster() {
+void module_output_adjuster(struct command_t *command) {
     // FİLE düzenle
     system("cat trick.txt | grep \"Loading Module\" -n | tail -1  > trick2.txt" );
-    //remove("trick.txt"); 
     FILE *secondFile = fopen("trick2.txt", "r");
     char line[1000];
     
@@ -952,7 +910,6 @@ void module_output_adjuster() {
         printf("%s", line);
         char *toPtr = strchr(line, ':');
         strncat(buffer, line, toPtr-line);
-        //strcat(buffer, '\0');
         lineInt = strtol(buffer, &ptr, 10);
     }
     printf("%s and %ld\n", buffer, lineInt);
@@ -962,6 +919,7 @@ void module_output_adjuster() {
     FILE *trickFile = fopen("trick.txt", "r"); 
     FILE *outputFile = fopen("trick2.txt", "w");
     lineCounter = 0;
+    fputs("digraph {\n", outputFile);
     while (fgets(line, 1000, trickFile)) {
         if (lineCounter < lineInt) {
             
@@ -972,9 +930,15 @@ void module_output_adjuster() {
         }
         lineCounter++;
     }
+    fputs("}", outputFile);
     fclose(trickFile);
     fclose(outputFile);
 
+    char input[100] = "cat trick2.txt | dot -Tpng >";
+    strcat(input, command->args[1]);
+    system(input);
+    remove("trick.txt");
+    //remove("trick2.txt");
 
 }
 
