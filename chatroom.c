@@ -9,7 +9,7 @@
 #include <sys/wait.h>
 
 int main(int argc, char** argv) {
-    printf("Welcome to comp304!\n");
+    printf("Welcome to %s!\n\n", argv[1]);
     char *fileName = malloc(sizeof(char)*(strlen(argv[1] + strlen(argv[2]) + 256)));
 
     strcat(fileName, "./tmp/");
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
                 d = opendir(roomName);
                 if (d) {
                     while((dir = readdir(d)) != NULL) {
-                        strcat(inputStr, dir->d_name);
+                        //strcat(inputStr, dir->d_name);
                         if (strcmp(".",dir->d_name) == 0 || strcmp("..", dir->d_name) == 0 ) {
                             continue;
                         }
@@ -94,8 +94,8 @@ int main(int argc, char** argv) {
                             close(fd0);
                             
                             //printf("WRİTER END\n");
-             
-                            printf("\033[A\r[%s] %s: %s\n", argv[1], argv[2], inputStr);
+                            printf("\033[A\r[%s] %s: %s", argv[1], argv[2], inputStr);
+                            fflush(stdout);
                          
                             //Then read from them
 
@@ -120,74 +120,10 @@ int main(int argc, char** argv) {
             read(fd1, str, 128);
             close(fd1);
             printf("%s", str);
-            //printf("\033[A\r[%s] %s: %s\n", argv[1], argv[2], str);
-
-            //wait(0);
+            fflush(stdout);
 
 
         }
     }
-    /*
-    DIR *d;
-    struct dirent *dir;
-    d = opendir(roomName);
-    if (d) {
-        while((dir = readdir(d)) != NULL) {
-            strcat(inputStr, dir->d_name);
-            if (strcmp(".",dir->d_name) == 0 || strcmp("..", dir->d_name) == 0 ) {
-                continue;
-            }
-
-            else if (strcmp(argv[2], dir->d_name) == 0) {
-                // WRITER
-                
-            }
-            else {
-                // READERS
-                char *currUser = malloc(sizeof(char)*128);
-                strcat(currUser, roomName);
-                strcat(currUser, "/");
-                strcat(currUser, dir->d_name);
-                
-                //First write in them
-                
-
-                pid_t pid;
-                pid = fork();
-                if (pid == 0) {
-                    printf("WRİTER\n");
-                    
-                    
-                    int fd0;                    
-                    fd0 = open(currUser, O_WRONLY);
-                    write(fd0, inputStr, 80);
-                    close(fd0);
-                    
-                    printf("WRİTER END\n");
-                    exit(0);
-                }
-                else {
-     
-                    printf("READER %s\n", currUser);
-                    char str[128];
-                    
-                    int fd1;
-                    fd1 = open(currUser, O_RDONLY);
-                    wait(0);
-                    read(fd1, str, 128);
-                    close(fd1);
-                    
-                    printf("Bunu okudum %s\n", str);
-                }
-                 
-                //Then read from them
-
-                free(currUser);
-            }
-        }
-    }
-    closedir(d);
-    */
-    // End
     return 0;
 }

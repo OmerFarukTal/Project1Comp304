@@ -330,12 +330,15 @@ int prompt(struct command_t *command)
   	return SUCCESS;
 }
 int process_command(struct command_t *command);
-// ME
+// Part 2 Pipe and IO
 int handle_pipe_and_IO(struct command_t *command);
 void pipe_handler(struct command_t *command);
 void io_handler(struct command_t *command);
+//Part 4
 void module_handler(struct command_t *command);
 void module_output_adjuster(struct command_t *command);
+//Part 3 wiseman
+void wiseman_handler(struct command_t *command);
 int main()
 {
 	while (1)
@@ -401,6 +404,12 @@ int process_command(struct command_t *command)
             module_output_adjuster(command);
             module_installed=1;
         }
+        return SUCCESS;
+    }
+
+    if(strcmp(command->name, "wiseman") == 0) {
+        printf("Wiseman works\n");
+        wiseman_handler(command);
         return SUCCESS;
     }
 
@@ -821,6 +830,8 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
             
 
             if (whichIO == 0 && ioCount == 0) {
+                
+
             }
             else if (whichIO == 1) {
                 int file_fd = open(fileName, O_RDWR | O_CREAT, 0666);
@@ -943,6 +954,30 @@ void module_output_adjuster(struct command_t *command) {
 }
 
 
+void wiseman_handler(struct command_t *command) {
+    
+    if(strcmp(command->args[0], "stop") == 0) {
+            printf("Invalid input\n");
+            printf("Wiseman is busy, enter a interval\n");
+    }
+    else {
+        int in_every_minutes = 1;
+        if (command->args[0] != NULL) {
+            in_every_minutes = atoi(command->args[0]) ? atoi(command->args[0]) : 1;
+        }
+        
+        
+        
+        FILE *f = fopen("a.txt", "w+");
+        fprintf(f, "*/%d * * * * fortune -a | espeak\n", in_every_minutes);
+        fclose(f);
+        system("crontab a.txt");
+        //remove("a.txt");
+    }
+
+
+
+}
 
 
 
