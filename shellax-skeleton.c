@@ -718,6 +718,32 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
     if (command->redirects[0] == NULL &&  command->redirects[1] == NULL &&  command->redirects[2] == NULL ) {
         printf("OKAY2\n");
     }
+    else if (command->redirects[0] != NULL ) {
+       
+        printf("Hello INPUT REDİRECTİON\n");
+        int exit_value;
+        int stdin = dup(0);
+        char *fileName = command->redirects[0];
+        int file_fd = open(fileName, O_RDONLY);
+
+        dup2(file_fd, 0); //stdout
+        
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            // Child
+            process_command(command);
+            exit(0);
+        }
+        
+        wait(&exit_value);
+        dup2(stdin, 0);
+        close(stdin);
+        close(file_fd);
+
+
+
+    }
     else {
         // Find the beginning of IO command
 
@@ -740,33 +766,6 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
 		memset(subCommand, 0, sizeof(struct command_t)); // set all bytes to 0        
         parse_command(currComm, subCommand);
         
-        //copy command->commandStr into a string and parse it for IO, and calculate IO redirection
-        /*
-        char* commandStrCpy = strdup(command->commandStr);
-        
-        char *ioPointer;
-        int ioCounter = 0;
-        if (strchr(commandStrCpy, '>') == NULL) ioPointer = strchr(commandStrCpy, '<'); 
-        else if (strchr(commandStrCpy, '<') == NULL) ioPointer = strchr(commandStrCpy, '>'); 
-        else if (strchr(commandStrCpy, '>') < strchr(commandStrCpy, '<')) ioPointer = strchr(commandStrCpy, '>');        
-        else ioPointer = strchr(commandStrCpy, '<');
-        while(ioPointer != NULL) {
-            if(ioPointer[0] == '>' && ioPointer[1] == '>') ioPointer++;
-            //if(ioPointer[0] == '>' && ioPointer[1] == '<') perror("><"); MAYBE NEED TO HANDLE THESE
-            //if(ioPointer[0] == '<' && ioPointer[1] == '>') perror("<>");
-
-            ioPointer++;
-            if (strchr(ioPointer, '>') == NULL) ioPointer = strchr(ioPointer, '<'); 
-            else if (strchr(ioPointer, '<') == NULL) ioPointer = strchr(ioPointer, '>'); 
-            else if (strchr(ioPointer, '>') < strchr(ioPointer, '<')) ioPointer = strchr(ioPointer, '>');        
-            else ioPointer = strchr(ioPointer, '<');
-            
-            //sleep(1);
-            //printf("IO POINTER %s\n", ioPointer);
-            ioCounter++;
-        }
-        */ 
-
         //Begin further parse and IO direction
         char* commandString = strdup(command->commandStr);
 
@@ -831,6 +830,7 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
 
             if (whichIO == 0 && ioCount == 0) {
                 
+               
 
             }
             else if (whichIO == 1) {
@@ -969,7 +969,7 @@ void wiseman_handler(struct command_t *command) {
         
         
         FILE *f = fopen("a.txt", "w+");
-        fprintf(f, "*/%d * * * * fortune -a | espeak\n", in_every_minutes);
+        fprintf(f, "*/%d * * * * PATH=/usr/games/:$PATH fortune -a | espeak\n", in_every_minutes);
         fclose(f);
         system("crontab a.txt");
         //remove("a.txt");

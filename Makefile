@@ -27,3 +27,6 @@ module:
 cleanmodule:
 	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
 
+prepare:
+	gcc ./uniq.c -o ./uniq.out
+	gcc ./chatroom.c -o ./chatroom.out
