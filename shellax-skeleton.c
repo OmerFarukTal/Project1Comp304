@@ -637,12 +637,12 @@ int process_command(struct command_t *command)
 
 int handle_pipe_and_IO(struct command_t *command){
     if (command->next == NULL && command->redirects[0] == NULL &&  command->redirects[1] == NULL &&  command->redirects[2] == NULL ) {
-        printf("OKAY\n");
+        //printf("OKAY\n");
         return process_command(command);
     }
     else if (command->next != NULL) {
         // IT CONTAINS PIPE
-        printf("IT CONTAINS PIPE\n");
+        //printf("IT CONTAINS PIPE\n");
         
         /* 
         struct command_t *currCommand = command;
@@ -655,7 +655,7 @@ int handle_pipe_and_IO(struct command_t *command){
         return SUCCESS; // ? 
     }
     else if (command->redirects[0] != NULL ||  command->redirects[1] != NULL ||  command->redirects[2] != NULL ) {
-        printf("IT CONTAINS IO\n");
+        //printf("IT CONTAINS IO\n");
         io_handler(command);
         return SUCCESS; // ? 
     }
@@ -716,11 +716,11 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
     // get the min index of IO redirection [before which args]
     // then using  dup and dup2 (dup is encourgaed) 
     if (command->redirects[0] == NULL &&  command->redirects[1] == NULL &&  command->redirects[2] == NULL ) {
-        printf("OKAY2\n");
+        //printf("OKAY2\n");
     }
     else if (command->redirects[0] != NULL ) {
        
-        printf("Hello INPUT REDİRECTİON\n");
+        //printf("Hello INPUT REDİRECTİON\n");
         int exit_value;
         int stdin = dup(0);
         char *fileName = command->redirects[0];
@@ -949,7 +949,7 @@ void module_output_adjuster(struct command_t *command) {
     strcat(input, command->args[1]);
     system(input);
     remove("trick.txt");
-    //remove("trick2.txt");
+    remove("trick2.txt");
 
 }
 
@@ -972,7 +972,7 @@ void wiseman_handler(struct command_t *command) {
         fprintf(f, "*/%d * * * * PATH=/usr/games/:$PATH fortune -a | espeak\n", in_every_minutes);
         fclose(f);
         system("crontab a.txt");
-        //remove("a.txt");
+        remove("a.txt");
     }
 
 

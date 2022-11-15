@@ -1,3 +1,0 @@
-* * * * * fortune > /tmp/cat.txt
-* * * * * fortune >> /tmp/cat.txt
-

@@ -12,7 +12,7 @@ int main(int argc, char** argv) {
     printf("Welcome to %s!\n\n", argv[1]);
     char *fileName = malloc(sizeof(char)*(strlen(argv[1] + strlen(argv[2]) + 256)));
 
-    strcat(fileName, "./tmp/");
+    strcat(fileName, "/tmp/");
     strcat(fileName, argv[1]);
     char *roomName = strdup(fileName);
     //printf("%s\n", fileName);

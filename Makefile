@@ -30,3 +30,7 @@ cleanmodule:
 prepare:
 	gcc ./uniq.c -o ./uniq.out
 	gcc ./chatroom.c -o ./chatroom.out
+	gcc ./saat.c -o ./saat.out
+	
+cleanprep:
+	rm uniq.out chatroom.out saat.out

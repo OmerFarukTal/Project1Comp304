@@ -1,1 +1,0 @@
-cmd_/home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.mod := { echo  /home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.o;  echo; } > /home/omerftal/Desktop/Comp304/Project1Comp304/mymodule2.mod
