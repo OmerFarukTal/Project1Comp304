@@ -265,7 +265,7 @@ void main(int argc, char *argv[]) {
     else if (strcmp(argv[1], "blu") == 0) {
         printf(ANSI_COLOR_BLUE);
     }
-    else if (strcmp(argv[1], "purple") == 0) {
+    else if (strcmp(argv[1], "pur") == 0) {
         printf(ANSI_COLOR_PURPLE);
     }
     else {

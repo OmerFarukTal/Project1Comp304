@@ -1,3 +1,73 @@
+					Makefile
+
+make prep: compile chatroom.c saat.c uniq.c
+make cleanprep: rm the files created with make prep
+				
+make run: run shellax-skeleton.c
+
+make module: compile mymodule2.c
+make cleanmodule: rm the files created with make module				
+				
+					Part 1
+
+Fork and execute:
+Every command operation is hadnled by forking
+
+
+Background (&):
+For background operations another fork is created by the child process. So grandchild process runs the process but the child one is get killed. Since the grandchild lost his parent it is adopted by the init process so when its execution is ended it is killed by the init process. And main process is able to run other processes.
+
+
+execv(): 
+Ecery execvp is replaced by execv, we get the path variable for this first then we tried to eecute command by iterating over the path variables. It finds the appropiate one this way and then runs it. If it cannot find it skips, it also checks if the given executable file is located in the current or in a dependent directory.
+
+
+
+
+					Part 2
+
+Pipe:
+For piping operation the stdout is dup and its output is directed into a pipe, pipe other and is connected to the stdin of the next file. Pipe'ing just redirects stdout of the prvious operation to next operation. When it is done it prints into the termnal as it is (since it is not dupped anymore.)
+
+
+IO Redirection:
+For input redirection it opens the file and dup file descriptor with stdout, with this it is able to redirect the content of the file to given executable.
+For output and append redşrection it open or create the necessary file and then it dup file descriptor to the stdin of the file, by duppig the stdout of previous expression it redirects the output of one to the next one. 
+ 
+
+
+
+					Part 3
+					
+uniq:
+uniq is called with ./uniq.out. It gets the stdin and then read it line by line, then apply the necessary uniq operation. Then directly prints out the result.
+
+
+chatroom:
+chatroom is called with ./chatroom.out command. It creates a roomfile under /tmp/. The users can write seperately in different command tabs. The output sometimes prints out "\n" it is not handled since it does not distort or break the chaatroom, but not quite looking good to be honest. It uses named pipes for that as it is instructed in the project file. One user always read the other pipes, while writing other pipes when there is only message written.
+
+
+wiseman:
+wiseman is called as "wiseman". It creates a file for cron to work on, then directly deletes the file tohide it from the user. Then it speaks the fortune output, in given time slot.
+
+
+saat:(Custom command)
+saat is called as "saat inp" (inp is three lettered color input: i.e. mag, bla, red, yel, blu, pur). The command prompt the current time in the intended color and also printsout a fortune ouput.
+ 
+
+
+
+					Part 4
+
+psvis:
+psvis is called as "psvis". It consturc an image file with the given name (name should be in format *.txt) and the image consist parent child relationship of given process id with the oldest childs have an arrow to them.
+
+
+
+
+
+
+
 
 
 
