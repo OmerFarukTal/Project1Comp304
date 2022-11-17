@@ -747,7 +747,7 @@ void io_handler(struct command_t *command) { // Cannot handle input commands, co
     else {
         // Find the beginning of IO command
 
-        print_command(command);
+        //print_command(command);
 
         char* fileStart;
         if (strchr(command->commandStr, '>') == NULL) fileStart = strchr(command->commandStr, '<'); 
@@ -918,12 +918,12 @@ void module_output_adjuster(struct command_t *command) {
     char buffer[10];
     char *ptr;
     while(fgets(line, 1000, secondFile)) {
-        printf("%s", line);
+        //printf("%s", line);
         char *toPtr = strchr(line, ':');
         strncat(buffer, line, toPtr-line);
         lineInt = strtol(buffer, &ptr, 10);
     }
-    printf("%s and %ld\n", buffer, lineInt);
+    //printf("%s and %ld\n", buffer, lineInt);
     fclose(secondFile);
     // Now read the trick and adjust the output
     

@@ -4,6 +4,7 @@ make prep: compile chatroom.c saat.c uniq.c
 make cleanprep: rm the files created with make prep
 				
 make run: run shellax-skeleton.c
+(if it does not run then use  "make a" then "make run")
 
 make module: compile mymodule2.c
 make cleanmodule: rm the files created with make module				
